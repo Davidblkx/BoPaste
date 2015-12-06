@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,6 +19,8 @@ namespace BoPaste
     // ReSharper disable once RedundantExtendsListEntry
     public partial class TheFreeWindow : Window
     {
+        public Manager KeyManager;
+
         public TheFreeWindow()
         {
             InitializeComponent();
@@ -26,10 +29,134 @@ namespace BoPaste
             IsResizable = true;
             Title = "MENU";
 
+            AddMenuItem("Create", s=> {CreateItem();});
+            AddMenuItem("Reload", s => { ReloadItems(); });
             AddMenuItem("Exit", s => { Close(); });
 
             InitializeFreeWindow();
+            Loaded += TheFreeWindow_Loaded;
+            Closed += TheFreeWindow_Closed;
         }
+
+        private void InitComboBox()
+        {
+            foreach (var k in Enum.GetNames(typeof(Key)))
+                cmbModB.Items.Add(k);
+
+            foreach (var m in Enum.GetNames(typeof (ModifierKeys)))
+                cmbModA.Items.Add(m);
+        }
+        private void CreateItem()
+        {
+            listViewItems.SelectedIndex = -1;
+            txtName.Text = string.Empty;
+            txtText.Text = string.Empty;
+            cmbModA.SelectedIndex = -1;
+            cmbModB.SelectedIndex = -1;
+        }
+        private void ReloadItems()
+        {
+            txtName.Text = string.Empty;
+            txtText.Text = string.Empty;
+            cmbModA.SelectedIndex = -1;
+            cmbModB.SelectedIndex = -1;
+
+            listViewItems.ItemsSource = null;
+            listViewItems.ItemsSource = new ObservableCollection<BoPasteItem>(KeyManager.Collection.Values);
+            listViewItems.SelectedIndex = 0;
+
+            KeyManager.StartHotkeys();
+        }
+
+
+        private void TheFreeWindow_Closed(object sender, EventArgs e)
+        {
+            Settings.Set("Width", ((int)Width).ToString(), "Window");
+            Settings.Set("Height", ((int)Height).ToString(), "Window");
+            Settings.Set("Left", ((int)Left).ToString(), "Window");
+            Settings.Set("Top", ((int)Top).ToString(), "Window");
+            Settings.SaveFile();
+
+            
+        }
+        private void TheFreeWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            Settings.InitializeSettings();
+
+            KeyManager = new Manager();
+
+            Width = Settings.Get("Width", "Window").ToInt();
+            Height = Settings.Get("Height", "Window").ToInt();
+            Left = Settings.Get("Left", "Window").ToInt();
+            Top = Settings.Get("Top", "Window").ToInt();
+
+            listViewItems.SelectionChanged += ListViewItems_SelectionChanged;
+
+            InitComboBox();
+            ReloadItems();
+        }
+        private void ListViewItems_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var item = listViewItems.SelectedItem as BoPasteItem;
+            if (item == null) return;
+
+            txtName.Text = item.Name;
+            txtText.Text = item.Text;
+            cmbModA.SelectedItem = item.InputModifiers.ToString();
+            cmbModB.SelectedItem = item.InputKey.ToString();
+        }
+        private void BtnSaveOnClick(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtName.Text))
+            {
+                MessageBox.Show("The name is invalid");
+                return;
+            }
+
+            if (cmbModA.SelectedIndex == -1)
+            {
+                MessageBox.Show("The selected modifier is invalid");
+                return;
+            }
+
+            if (cmbModB.SelectedIndex == -1)
+            {
+                MessageBox.Show("The selected Key is invalid");
+                return;
+            }
+
+            var itm = new BoPasteItem
+            {
+                InputKey = (Key)Enum.Parse(typeof(Key), cmbModB.SelectedItem.ToString(), true),
+                InputModifiers = (ModifierKeys)Enum.Parse(typeof(ModifierKeys), cmbModA.SelectedItem.ToString(), true),
+                Name = txtName.Text,
+                Text = txtText.Text
+            };
+
+            if(KeyManager.Collection.ContainsKey(itm.Name))
+                KeyManager.Collection[itm.Name] = itm;
+            else
+                KeyManager.Collection.Add(itm.Name, itm);
+
+            KeyManager.Save();
+            ReloadItems();
+        }
+        private void BtnRemoveOnClick(object sender, RoutedEventArgs e)
+        {
+            var item = listViewItems.SelectedItem as BoPasteItem;
+            if (item == null) return;
+
+            if (KeyManager.Collection.ContainsKey(item.Name))
+                KeyManager.Collection.Remove(item.Name);
+
+            ReloadItems();
+        }
+
+
+
+
+
+
 
         #region BoPaste
 
@@ -539,5 +666,6 @@ namespace BoPaste
         #endregion
 
         #endregion
+
     }
 }

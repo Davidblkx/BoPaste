@@ -41,7 +41,6 @@
                     Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:TheFreeWindow}}, Path=TitleBarBackground }"/>
             <Setter Property="Foreground"
                     Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:TheFreeWindow}}, Path=TitleBarForeground }"/>
-
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
@@ -79,7 +78,49 @@
         </Grid.ColumnDefinitions>
 
         <!-- ************************* MAIN CONTENT ************************* -->
-        <Grid x:Name="FwContent" Grid.Column="1" Grid.Row="2" Margin="0" Background="White"></Grid>
+        <Grid x:Name="FwContent" Grid.Column="1" Grid.Row="2" Margin="0" Background="White">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="2*"></RowDefinition>
+            </Grid.RowDefinitions>
+            
+            <ListView x:Name="listViewItems" Grid.Row="0" Margin="5"></ListView>
+            <Grid x:Name="hItemGrid" Grid.Row="1" Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20"></RowDefinition>
+                    <RowDefinition Height="20"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="20"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Margin="5,0">Nome: </TextBlock>
+                <TextBox Grid.Row="1" Grid.Column="0" x:Name="txtName" Margin="5,0"></TextBox>
+
+                <TextBlock Grid.Row="0" Grid.Column="1">Modifiers:</TextBlock>
+                <ComboBox x:Name="cmbModA" Grid.Row="1" Grid.Column="1" 
+                          Width="100" HorizontalAlignment="Left"></ComboBox>
+                <ComboBox x:Name="cmbModB" Grid.Row="1" Grid.Column="1" 
+                          Width="100" HorizontalAlignment="Right" Margin="0,0,5,0" ></ComboBox>
+                
+                <TextBox AcceptsReturn="True" AcceptsTab="True" x:Name="txtText"
+                         Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="0"
+                         Margin="5"></TextBox>
+                
+                <Button x:Name="btnSave" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Left"
+                        Margin="5,0" Style="{StaticResource FwBtnStyleBase}" Width="100"
+                        Click="BtnSaveOnClick"
+                        >Save</Button>
+
+                <Button x:Name="btnRemove" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right"
+                        Margin="5,0" Style="{StaticResource FwBtnStyleBase}" Width="100"
+                        Click="BtnRemoveOnClick"
+                        >Remove</Button>
+            </Grid>
+        </Grid>
         <!-- ************************* MAIN CONTENT ************************* -->
 
 
